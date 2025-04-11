@@ -56,22 +56,57 @@ pub(crate) fn imply_features(mut value: cache::Initializer) -> cache::Initialize
             };
         }
 
+        // Zvbb is a superset of Zvkb.
+        imply!(zvbb => zvkb);
+        // Certain set of vector cryptography extensions form a group.
+        group!(zvkn == zvkned & zvknhb & zvkb & zvkt);
+        group!(zvknc == zvkn & zvbc);
+        group!(zvkng == zvkn & zvkg);
+        group!(zvks == zvksed & zvksh & zvkb & zvkt);
+        group!(zvksc == zvks & zvbc);
+        group!(zvksg == zvks & zvkg);
+        // For vector cryptography, Zvknhb and Zvbc require integer arithmetic
+        // with EEW=64 (Zve64x) while others not depending on them
+        // require EEW=32 (Zve32x).
+        imply!(zvknhb | zvbc => zve64x);
+        imply!(zvbb | zvkb | zvkg | zvkned | zvknha | zvksed | zvksh => zve32x);
+
         group!(zkn == zbkb & zbkc & zbkx & zkne & zknd & zknh);
         group!(zks == zbkb & zbkc & zbkx & zksed & zksh);
         group!(zk == zkn & zkr & zkt);
 
+        imply!(zacas => zaamo);
         group!(a == zalrsc & zaamo);
 
         group!(b == zba & zbb & zbs);
 
+        imply!(zcf => zca & f);
+        imply!(zcd => zca & d);
+        imply!(zcmop | zcb => zca);
+
         imply!(zhinx => zhinxmin);
         imply!(zdinx | zhinxmin => zfinx);
 
+        imply!(zvfh => zvfhmin);
+        imply!(zvfhmin => zve32f);
+
+        imply!(v => zve64d);
+        imply!(zve64d => zve64f & d);
+        imply!(zve64f => zve64x & zve32f);
+        imply!(zve64x => zve32x);
+        imply!(zve32f => zve32x & f);
+
         imply!(zfh => zfhmin);
         imply!(q => d);
-        imply!(d | zfhmin => f);
+        imply!(d | zfhmin | zfa => f);
 
-        imply!(zicntr | zihpm | zkr | f | zfinx => zicsr);
+        // Relatively complex implication rules from the "C" extension.
+        imply!(c => zca);
+        imply!(c & d => zcd);
+        #[cfg(target_arch = "riscv32")]
+        imply!(c & f => zcf);
+
+        imply!(zicntr | zihpm | zkr | f | zfinx | zve32x => zicsr);
         imply!(s | h => zicsr);
 
         // Loop until the feature flags converge.
