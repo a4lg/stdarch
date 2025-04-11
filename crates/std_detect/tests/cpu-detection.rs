@@ -320,11 +320,6 @@ fn riscv_linux() {
     println!("zvksg: {}", is_riscv_feature_detected!("zvksg"));
     println!("zvkt: {}", is_riscv_feature_detected!("zvkt"));
     println!("supm: {}", is_riscv_feature_detected!("supm"));
-    println!("svnapot: {}", is_riscv_feature_detected!("svnapot"));
-    println!("svpbmt: {}", is_riscv_feature_detected!("svpbmt"));
-    println!("svinval: {}", is_riscv_feature_detected!("svinval"));
-    println!("h: {}", is_riscv_feature_detected!("h"));
-    println!("s: {}", is_riscv_feature_detected!("s"));
     println!("j: {}", is_riscv_feature_detected!("j"));
     println!("p: {}", is_riscv_feature_detected!("p"));
 }
