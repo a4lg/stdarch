@@ -3,6 +3,75 @@
 use super::auxvec;
 use crate::detect::{Feature, bit, cache};
 
+/// Imply features by the given set of enabled features.
+///
+/// Note that it does not perform any consistency checks including existence of
+/// conflicting extensions and/or complicated requirements.  Eliminating such
+/// inconsistencies is the responsibility of the feature detection logic and
+/// its provider(s).
+pub(crate) fn imply_features(mut value: cache::Initializer) -> cache::Initializer {
+    loop {
+        // Check convergence of feature flags later.
+        let prev = value;
+
+        // Expect that the optimizer turns repeated operations into
+        // a fewer number of bit-manipulation operations.
+        macro_rules! imply {
+            // Regular implication:
+            // A1 => (B1[, B2...]), A2 => (B1[, B2...]) and so on.
+            ($($from: ident)|+ => $($to: ident)&+) => {
+                if [$(Feature::$from as u32),+].iter().any(|&x| value.test(x)) {
+                    $(
+                        value.set(Feature::$to as u32);
+                    )+
+                }
+            };
+            // Implication with multiple requirements:
+            // A1 && A2 ... => (B1[, B2...]).
+            ($($from: ident)&+ => $($to: ident)&+) => {
+                if [$(Feature::$from as u32),+].iter().all(|&x| value.test(x)) {
+                    $(
+                        value.set(Feature::$to as u32);
+                    )+
+                }
+            };
+        }
+        macro_rules! group {
+            ($group: ident == $($member: ident)&+) => {
+                // Forward implication as defined in the specifications.
+                imply!($group => $($member)&+);
+                // Reverse implication to "group extension" from its members.
+                // This is not a part of specifications but convenient for
+                // feature detection and implemented in e.g. LLVM.
+                imply!($($member)&+ => $group);
+            };
+        }
+
+        group!(zkn == zbkb & zbkc & zbkx & zkne & zknd & zknh);
+        group!(zks == zbkb & zbkc & zbkx & zksed & zksh);
+        group!(zk == zkn & zkr & zkt);
+
+        group!(a == zalrsc & zaamo);
+
+        group!(b == zba & zbb & zbs);
+
+        imply!(zhinx => zhinxmin);
+        imply!(zdinx | zhinxmin => zfinx);
+
+        imply!(zfh => zfhmin);
+        imply!(q => d);
+        imply!(d | zfhmin => f);
+
+        imply!(zicntr | zihpm | zkr | f | zfinx => zicsr);
+        imply!(s | h => zicsr);
+
+        // Loop until the feature flags converge.
+        if prev == value {
+            return value;
+        }
+    }
+}
+
 /// Read list of supported features from the auxiliary vector.
 pub(crate) fn detect_features() -> cache::Initializer {
     let mut value = cache::Initializer::default();
@@ -12,22 +81,16 @@ pub(crate) fn detect_features() -> cache::Initializer {
         }
     };
 
-    // Use auxiliary vector to enable single-letter ISA extensions and Zicsr.
+    // Use auxiliary vector to enable single-letter ISA extensions.
     // The values are part of the platform-specific [asm/hwcap.h][hwcap]
     //
     // [hwcap]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/riscv/include/uapi/asm/hwcap.h?h=v6.14
     let auxv = auxvec::auxv().expect("read auxvec"); // should not fail on RISC-V platform
     #[allow(clippy::eq_op)]
-    let has_a = bit::test(auxv.hwcap, (b'a' - b'a').into());
-    enable_feature(Feature::a, has_a);
-    enable_feature(Feature::zalrsc, has_a);
-    enable_feature(Feature::zaamo, has_a);
+    enable_feature(Feature::a, bit::test(auxv.hwcap, (b'a' - b'a').into()));
     enable_feature(Feature::c, bit::test(auxv.hwcap, (b'c' - b'a').into()));
-    let has_d = bit::test(auxv.hwcap, (b'd' - b'a').into());
-    let has_f = bit::test(auxv.hwcap, (b'f' - b'a').into());
-    enable_feature(Feature::d, has_d);
-    enable_feature(Feature::f, has_d | has_f);
-    enable_feature(Feature::zicsr, has_d | has_f);
+    enable_feature(Feature::d, bit::test(auxv.hwcap, (b'd' - b'a').into()));
+    enable_feature(Feature::f, bit::test(auxv.hwcap, (b'f' - b'a').into()));
     enable_feature(Feature::h, bit::test(auxv.hwcap, (b'h' - b'a').into()));
     enable_feature(Feature::m, bit::test(auxv.hwcap, (b'm' - b'a').into()));
 
@@ -48,5 +111,5 @@ pub(crate) fn detect_features() -> cache::Initializer {
     // to detect when Rust is used to write Linux kernel modules.
     // These should be more than Auxvec way to detect supervisor features.
 
-    value
+    imply_features(value)
 }
