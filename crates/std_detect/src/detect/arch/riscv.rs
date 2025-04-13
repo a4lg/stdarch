@@ -57,9 +57,9 @@ features! {
     /// | `"m"`           | M           | Yes [^ima]         |
     /// | `"q"`           | Q           | No                 |
     /// | `"v"`           | V           | 6.5                |
-    /// | `"zaamo"`       | Zaamo       | No [^ima] [^dep]   |
+    /// | `"zaamo"`       | Zaamo       | 6.15 [^ima] [^dep] |
     /// | `"zacas"`       | Zacas       | 6.8                |
-    /// | `"zalrsc"`      | Zalrsc      | No [^ima] [^dep]   |
+    /// | `"zalrsc"`      | Zalrsc      | 6.15 [^ima] [^dep] |
     /// | `"zawrs"`       | Zawrs       | 6.11               |
     /// | `"zba"`         | Zba         | 6.5                |
     /// | `"zbb"`         | Zbb         | 6.5                |
@@ -75,19 +75,21 @@ features! {
     /// | `"zcmop"`       | Zcmop       | 6.11               |
     /// | `"zdinx"`       | Zdinx       | No                 |
     /// | `"zfa"`         | Zfa         | 6.8                |
+    /// | `"zfbfmin"`     | Zfbfmin     | 6.15               |
     /// | `"zfh"`         | Zfh         | 6.8                |
     /// | `"zfhmin"`      | Zfhmin      | 6.8                |
     /// | `"zfinx"`       | Zfinx       | No                 |
     /// | `"zhinx"`       | Zhinx       | No                 |
     /// | `"zhinxmin"`    | Zhinxmin    | No                 |
+    /// | `"zicbom"`      | Zicbom      | 6.15               |
     /// | `"zicboz"`      | Zicboz      | 6.7                |
-    /// | `"zicntr"`      | Zicntr      | No [^ima-cntr] [^cntr] |
+    /// | `"zicntr"`      | Zicntr      | 6.15 [^cntr]       |
     /// | `"zicond"`      | Zicond      | 6.8                |
     /// | `"zicsr"`       | Zicsr       | No [^ima] [^dep]   |
     /// | `"zifencei"`    | Zifencei    | No [^ima]          |
     /// | `"zihintntl"`   | Zihintntl   | 6.8                |
     /// | `"zihintpause"` | Zihintpause | 6.10               |
-    /// | `"zihpm"`       | Zihpm       | No                 |
+    /// | `"zihpm"`       | Zihpm       | 6.15 [^cntr]       |
     /// | `"zimop"`       | Zimop       | 6.11               |
     /// | `"zk"`          | Zk          | No [^zkr]          |
     /// | `"zkn"`         | Zkn         | 6.8                |
@@ -107,6 +109,8 @@ features! {
     /// | `"zve64d"`      | Zve64d      | 6.11 [^dep]        |
     /// | `"zve64f"`      | Zve64f      | 6.11 [^dep]        |
     /// | `"zve64x"`      | Zve64x      | 6.11 [^dep]        |
+    /// | `"zvfbfmin"`    | Zvfbfmin    | 6.15               |
+    /// | `"zvfbfwma"`    | Zvfbfwma    | 6.15               |
     /// | `"zvfh"`        | Zvfh        | 6.8                |
     /// | `"zvfhmin"`     | Zvfhmin     | 6.8                |
     /// | `"zvkb"`        | Zvkb        | 6.8                |
@@ -127,10 +131,6 @@ features! {
     /// [^ima]: Or enabled when the IMA base behavior is enabled on the Linux
     /// kernel version 6.4 or later (for bases, the only matching one -- either
     /// `"rv32i"` or `"rv64i"` -- is enabled).
-    ///
-    /// [^ima-cntr]: If the IMA base behavior is enabled on the Linux kernel
-    /// version 6.4 or later, the Zicntr extension should be also present.
-    /// However, it seems that Linux does not guarantee its existence.
     ///
     /// [^cntr]: Even if this extension is available, it does not necessarily
     /// mean all performance counters are accessible.
@@ -213,6 +213,9 @@ features! {
     @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zimop: "zimop";
     without cfg check: true;
     /// "Zimop" Extension for May-Be-Operations
+    @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zicbom: "zicbom";
+    without cfg check: true;
+    /// "Zicbom" Extension for Cache-Block Management Instructions
     @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zicboz: "zicboz";
     without cfg check: true;
     /// "Zicboz" Extension for Cache-Block Zero Instruction
@@ -254,6 +257,9 @@ features! {
     @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zfa: "zfa";
     without cfg check: true;
     /// "Zfa" Extension for Additional Floating-Point Instructions
+    @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zfbfmin: "zfbfmin";
+    without cfg check: true;
+    /// "Zfbfmin" Extension for Scalar BF16 Converts
 
     @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zfinx: "zfinx";
     /// "Zfinx" Extension for Single-Precision Floating-Point in Integer Registers
@@ -337,6 +343,12 @@ features! {
     /// "Zvfh" Vector Extension for Half-Precision Floating-Point
     @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zvfhmin: "zvfhmin";
     /// "Zvfhmin" Vector Extension for Minimal Half-Precision Floating-Point
+    @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zvfbfmin: "zvfbfmin";
+    without cfg check: true;
+    /// "Zvfbfmin" Vector Extension for BF16 Converts
+    @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zvfbfwma: "zvfbfwma";
+    without cfg check: true;
+    /// "Zvfbfwma" Vector Extension for BF16 Widening Multiply-Add
 
     @FEATURE: #[unstable(feature = "stdarch_riscv_feature_detection", issue = "111192")] zvbb: "zvbb";
     /// "Zvbb" Extension for Vector Basic Bit-Manipulation
