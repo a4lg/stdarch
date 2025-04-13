@@ -141,7 +141,6 @@ pub(crate) fn detect_features() -> cache::Initializer {
     enable_feature(Feature::c, bit::test(auxv.hwcap, (b'c' - b'a').into()));
     enable_feature(Feature::d, bit::test(auxv.hwcap, (b'd' - b'a').into()));
     enable_feature(Feature::f, bit::test(auxv.hwcap, (b'f' - b'a').into()));
-    enable_feature(Feature::h, bit::test(auxv.hwcap, (b'h' - b'a').into()));
     enable_feature(Feature::m, bit::test(auxv.hwcap, (b'm' - b'a').into()));
     let has_v = bit::test(auxv.hwcap, (b'v' - b'a').into());
     let mut is_v_set = false;
